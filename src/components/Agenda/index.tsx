@@ -51,8 +51,7 @@ const Agenda = (): ReactElement => {
   const [currentHour, setCurrentHour] = useState(DateTime.local().hour)
   useEffect(() =>
     runEvery(REFRESH_INTERVAL, () => {
-      console.log('Set CurrentHour: ' + DateTime.local().hour)
-      setCurrentHour(DateTime.local().hour)
+      setCurrentHour(DateTime.local().hour), []
     }),
   )
 
