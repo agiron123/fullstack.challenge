@@ -60,3 +60,24 @@
   cursor: pointer;
   text-decoration: underline;
 }
+
+.filtersText {
+  @include title-text;
+  color: $blackColor;
+  padding-bottom: 12px;
+}
+
+.calendarLabel {
+  @include body-medium-text;
+  color: $blackColor;
+  padding-left: 12px;
+}
+
+.agendaFilterContainer {
+  padding-top: 12px;
+  padding-left: 15px;
+}
+
+.filtersWrapper {
+  display: flex;
+}

@@ -93,19 +93,28 @@ const Agenda = (): ReactElement => {
           </div>
         )}
 
-        <label htmlFor="calendarSelector">Calendar</label>
-        <select
-          name="calendarSelector"
-          id="calendar-select-dropdown"
-          onChange={onCalendarSelected}
-        >
-          <>
-            <option value={'None'}>None</option>
-            {calendars.map((calendar) => (
-              <option value={calendar}>{calendar}</option>
-            ))}
-          </>
-        </select>
+        <div className={style.agendaFilterContainer}>
+          <div className={style.filtersText}>Filters:</div>
+          <div className={style.filtersWrapper}>
+            <div>
+              <label htmlFor="calendarSelector" className={style.calendarLabel}>
+                Calendar:{' '}
+              </label>
+              <select
+                name="calendarSelector"
+                id="calendar-select-dropdown"
+                onChange={onCalendarSelected}
+              >
+                <>
+                  <option value={'None'}>None</option>
+                  {accountContext.account.calendars.map((calendar) => (
+                    <option value={calendar.id}>{calendar.color}</option>
+                  ))}
+                </>
+              </select>
+            </div>
+          </div>
+        </div>
 
         <List>
           {events
@@ -114,7 +123,7 @@ const Agenda = (): ReactElement => {
                 return true
               }
 
-              return selectedCalendar === calendar.color
+              return selectedCalendar === calendar.id
             })
             .map(({ calendar, event }) => (
               <EventCell key={event.id} calendar={calendar} event={event} />
