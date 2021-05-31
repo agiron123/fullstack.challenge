@@ -37,12 +37,6 @@ const REFRESH_INTERVAL = 10000
 
 const Agenda = (): ReactElement => {
   const accountContext = useContext(AccountContext)
-
-  const calendars: string[] = useMemo(
-    () => accountContext.account.calendars.map((calendar) => calendar.color),
-    [accountContext.account],
-  )
-
   const events: AgendaItem[] = useMemo(
     () =>
       accountContext.account.calendars
@@ -106,7 +100,7 @@ const Agenda = (): ReactElement => {
                 onChange={onCalendarSelected}
               >
                 <>
-                  <option value={'None'}>None</option>
+                  <option value={'All'}>All</option>
                   {accountContext.account.calendars.map((calendar) => (
                     <option value={calendar.id}>{calendar.color}</option>
                   ))}
@@ -118,8 +112,8 @@ const Agenda = (): ReactElement => {
 
         <List>
           {events
-            .filter(({ calendar, event }) => {
-              if (!selectedCalendar || selectedCalendar === 'None') {
+            .filter(({ calendar }) => {
+              if (!selectedCalendar || selectedCalendar === 'All') {
                 return true
               }
 
