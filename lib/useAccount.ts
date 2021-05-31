@@ -22,18 +22,15 @@ const useAccount = (): [
     try {
       setAccount(await getUpdatedAccount(account))
     } catch {
-      console.log('AccountFetchError caught!')
       showError(true)
     }
   }
 
   const showErrorMessage = () => {
-    console.log('Show error message!')
     showError(true)
   }
 
   const hideErrorMessage = () => {
-    console.log('Hide error Message!')
     showError(false)
   }
 
