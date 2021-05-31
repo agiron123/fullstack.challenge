@@ -38,12 +38,17 @@ const REFRESH_INTERVAL = 10000
 const Agenda = (): ReactElement => {
   const accountContext = useContext(AccountContext)
 
+  const calendars: string[] = useMemo(
+    () => accountContext.account.calendars.map((calendar) => calendar.color),
+    [accountContext.account],
+  )
+
   const events: AgendaItem[] = useMemo(
     () =>
       accountContext.account.calendars
-        .flatMap((calendar) =>
-          calendar.events.map((event) => ({ calendar, event })),
-        )
+        .flatMap((calendar) => {
+          return calendar.events.map((event) => ({ calendar, event }))
+        })
         .sort(compareByDateTime),
     [accountContext.account],
   )
@@ -56,6 +61,12 @@ const Agenda = (): ReactElement => {
   )
 
   const title = useMemo(() => greeting(currentHour), [currentHour])
+
+  const [selectedCalendar, setSelectedCalendar] = useState(null)
+
+  const onCalendarSelected = (e: React.FormEvent<HTMLSelectElement>) => {
+    setSelectedCalendar(e.currentTarget.value)
+  }
 
   return (
     <div className={style.outer}>
@@ -82,10 +93,32 @@ const Agenda = (): ReactElement => {
           </div>
         )}
 
+        <label htmlFor="calendarSelector">Calendar</label>
+        <select
+          name="calendarSelector"
+          id="calendar-select-dropdown"
+          onChange={onCalendarSelected}
+        >
+          <>
+            <option value={'None'}>None</option>
+            {calendars.map((calendar) => (
+              <option value={calendar}>{calendar}</option>
+            ))}
+          </>
+        </select>
+
         <List>
-          {events.map(({ calendar, event }) => (
-            <EventCell key={event.id} calendar={calendar} event={event} />
-          ))}
+          {events
+            .filter(({ calendar, event }) => {
+              if (!selectedCalendar || selectedCalendar === 'None') {
+                return true
+              }
+
+              return selectedCalendar === calendar.color
+            })
+            .map(({ calendar, event }) => (
+              <EventCell key={event.id} calendar={calendar} event={event} />
+            ))}
         </List>
       </div>
     </div>
