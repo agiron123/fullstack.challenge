@@ -36,16 +36,16 @@ const compareByDateTime = (a: AgendaItem, b: AgendaItem) =>
 const REFRESH_INTERVAL = 10000
 
 const Agenda = (): ReactElement => {
-  const account = useContext(AccountContext)
+  const accountContext = useContext(AccountContext)
 
   const events: AgendaItem[] = useMemo(
     () =>
-      account.calendars
+      accountContext.account.calendars
         .flatMap((calendar) =>
           calendar.events.map((event) => ({ calendar, event })),
         )
         .sort(compareByDateTime),
-    [account],
+    [accountContext.account],
   )
 
   const [currentHour, setCurrentHour] = useState(DateTime.local().hour)
@@ -63,6 +63,24 @@ const Agenda = (): ReactElement => {
         <div className={style.header}>
           <span className={style.title}>{title}</span>
         </div>
+
+        {accountContext.hasError && (
+          <div className={style.errorContainer}>
+            <div className={style.errorTextWrapper}>
+              <div className={style.errorText}>
+                We're having trouble refreshing account information.
+              </div>
+              <div
+                className={style.dismissText}
+                onClick={() => {
+                  accountContext.hideErrorMessage()
+                }}
+              >
+                Dismiss
+              </div>
+            </div>
+          </div>
+        )}
 
         <List>
           {events.map(({ calendar, event }) => (
