@@ -6,10 +6,16 @@ import AccountContext from 'src/context/accountContext'
 
 import Agenda from './Agenda'
 
-const REAL_TIME_UPDATES_INTERVAL = 10000
+const REAL_TIME_UPDATES_INTERVAL = 1000
 
 const Application = (): ReactElement => {
-  const [account, refreshAccount] = useAccount()
+  const [
+    account,
+    refreshAccount,
+    hasError,
+    showErrorMessage,
+    hideErrorMessage,
+  ] = useAccount()
 
   useEffect(
     () => runEvery(REAL_TIME_UPDATES_INTERVAL, refreshAccount),
@@ -17,7 +23,9 @@ const Application = (): ReactElement => {
   )
 
   return (
-    <AccountContext.Provider value={account}>
+    <AccountContext.Provider
+      value={{ account, hasError, showErrorMessage, hideErrorMessage }}
+    >
       <Agenda />
     </AccountContext.Provider>
   )
