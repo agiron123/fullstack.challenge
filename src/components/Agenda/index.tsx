@@ -62,6 +62,38 @@ const Agenda = (): ReactElement => {
     setSelectedCalendar(e.currentTarget.value)
   }
 
+  // Filter events by calendar.
+  const filteredEvents = useMemo(
+    () =>
+      events.filter(({ calendar }) => {
+        if (!selectedCalendar || selectedCalendar === 'All') {
+          return true
+        }
+
+        return selectedCalendar === calendar.id
+      }),
+    [events, selectedCalendar],
+  )
+
+  const departmentMapMemo: { [key: string]: [AgendaItem] } = useMemo(() => {
+    const departmentMap: { [key: string]: [AgendaItem] } = {}
+    for (let i = 0; i < filteredEvents.length; i++) {
+      const department = filteredEvents[i].event.department
+      if (!departmentMap[department]) {
+        departmentMap[department] = [filteredEvents[i]]
+      } else {
+        departmentMap[department].push(filteredEvents[i])
+      }
+    }
+
+    return departmentMap
+  }, [filteredEvents])
+
+  const [filterByDepartment, shouldFilterByDepartment] = useState(false)
+  const toggleDepartmentFilterSelected = () => {
+    shouldFilterByDepartment(!filterByDepartment)
+  }
+
   return (
     <div className={style.outer}>
       <div className={style.container}>
@@ -87,11 +119,11 @@ const Agenda = (): ReactElement => {
           </div>
         )}
 
-        <div className={style.agendaFilterContainer}>
-          <div className={style.filtersText}>Filters:</div>
+        <div className={style.sectionContainer}>
+          <div className={style.sectionHeading}>Filters:</div>
           <div className={style.filtersWrapper}>
             <div>
-              <label htmlFor="calendarSelector" className={style.calendarLabel}>
+              <label htmlFor="calendarSelector" className={style.inputLabel}>
                 Calendar:{' '}
               </label>
               <select
@@ -107,22 +139,42 @@ const Agenda = (): ReactElement => {
                 </>
               </select>
             </div>
+            <div>
+              <label htmlFor="departmentFilter" className={style.inputLabel}>
+                Department:
+              </label>
+              <input
+                type="checkbox"
+                id="departmentFilter"
+                name="departmentFilter"
+                value="filterByDepartment"
+                onChange={toggleDepartmentFilterSelected}
+                checked={filterByDepartment}
+              />
+            </div>
           </div>
         </div>
 
-        <List>
-          {events
-            .filter(({ calendar }) => {
-              if (!selectedCalendar || selectedCalendar === 'All') {
-                return true
-              }
-
-              return selectedCalendar === calendar.id
-            })
-            .map(({ calendar, event }) => (
+        {filterByDepartment ? (
+          Object.keys(departmentMapMemo).map((departmentKey) => (
+            <div className={style.sectionContainer}>
+              <div className={style.sectionHeading}>
+                {departmentKey === 'undefined' ? 'None' : departmentKey}
+              </div>
+              <List>
+                {departmentMapMemo[departmentKey].map(({ calendar, event }) => (
+                  <EventCell key={event.id} calendar={calendar} event={event} />
+                ))}
+              </List>
+            </div>
+          ))
+        ) : (
+          <List>
+            {filteredEvents.map(({ calendar, event }) => (
               <EventCell key={event.id} calendar={calendar} event={event} />
             ))}
-        </List>
+          </List>
+        )}
       </div>
     </div>
   )
