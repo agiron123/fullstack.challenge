@@ -1,4 +1,10 @@
-import React, { ReactElement, useContext, useMemo } from 'react'
+import React, {
+  ReactElement,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { DateTime } from 'luxon'
 
 import greeting from 'lib/greeting'
@@ -11,6 +17,7 @@ import List from './List'
 import EventCell from './EventCell'
 
 import style from './style.scss'
+import runEvery from 'lib/runEvery'
 
 type AgendaItem = {
   calendar: Calendar
@@ -26,20 +33,66 @@ const compareByDateTime = (a: AgendaItem, b: AgendaItem) =>
  * and list of calendar events
  */
 
-const Agenda = (): ReactElement => {
-  const account = useContext(AccountContext)
+const REFRESH_INTERVAL = 10000
 
+const Agenda = (): ReactElement => {
+  const accountContext = useContext(AccountContext)
   const events: AgendaItem[] = useMemo(
     () =>
-      account.calendars
-        .flatMap((calendar) =>
-          calendar.events.map((event) => ({ calendar, event })),
-        )
+      accountContext.account.calendars
+        .flatMap((calendar) => {
+          return calendar.events.map((event) => ({ calendar, event }))
+        })
         .sort(compareByDateTime),
-    [account],
+    [accountContext.account],
   )
 
-  const title = useMemo(() => greeting(DateTime.local().hour), [])
+  const [currentHour, setCurrentHour] = useState(DateTime.local().hour)
+  useEffect(() =>
+    runEvery(REFRESH_INTERVAL, () => {
+      setCurrentHour(DateTime.local().hour), []
+    }),
+  )
+
+  const title = useMemo(() => greeting(currentHour), [currentHour])
+
+  const [selectedCalendar, setSelectedCalendar] = useState(null)
+
+  const onCalendarSelected = (e: React.FormEvent<HTMLSelectElement>) => {
+    setSelectedCalendar(e.currentTarget.value)
+  }
+
+  // Filter events by calendar.
+  const filteredEvents = useMemo(
+    () =>
+      events.filter(({ calendar }) => {
+        if (!selectedCalendar || selectedCalendar === 'All') {
+          return true
+        }
+
+        return selectedCalendar === calendar.id
+      }),
+    [events, selectedCalendar],
+  )
+
+  const departmentMapMemo: { [key: string]: [AgendaItem] } = useMemo(() => {
+    const departmentMap: { [key: string]: [AgendaItem] } = {}
+    for (let i = 0; i < filteredEvents.length; i++) {
+      const department = filteredEvents[i].event.department
+      if (!departmentMap[department]) {
+        departmentMap[department] = [filteredEvents[i]]
+      } else {
+        departmentMap[department].push(filteredEvents[i])
+      }
+    }
+
+    return departmentMap
+  }, [filteredEvents])
+
+  const [filterByDepartment, shouldFilterByDepartment] = useState(false)
+  const toggleDepartmentFilterSelected = () => {
+    shouldFilterByDepartment(!filterByDepartment)
+  }
 
   return (
     <div className={style.outer}>
@@ -48,11 +101,80 @@ const Agenda = (): ReactElement => {
           <span className={style.title}>{title}</span>
         </div>
 
-        <List>
-          {events.map(({ calendar, event }) => (
-            <EventCell key={event.id} calendar={calendar} event={event} />
-          ))}
-        </List>
+        {accountContext.hasError && (
+          <div className={style.errorContainer}>
+            <div className={style.errorTextWrapper}>
+              <div className={style.errorText}>
+                We're having trouble refreshing account information.
+              </div>
+              <div
+                className={style.dismissText}
+                onClick={() => {
+                  accountContext.hideErrorMessage()
+                }}
+              >
+                Dismiss
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className={style.sectionContainer}>
+          <div className={style.sectionHeading}>Filters:</div>
+          <div className={style.filtersWrapper}>
+            <div>
+              <label htmlFor="calendarSelector" className={style.inputLabel}>
+                Calendar:{' '}
+              </label>
+              <select
+                name="calendarSelector"
+                id="calendar-select-dropdown"
+                onChange={onCalendarSelected}
+              >
+                <>
+                  <option value={'All'}>All</option>
+                  {accountContext.account.calendars.map((calendar) => (
+                    <option value={calendar.id}>{calendar.color}</option>
+                  ))}
+                </>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="departmentFilter" className={style.inputLabel}>
+                Department:
+              </label>
+              <input
+                type="checkbox"
+                id="departmentFilter"
+                name="departmentFilter"
+                value="filterByDepartment"
+                onChange={toggleDepartmentFilterSelected}
+                checked={filterByDepartment}
+              />
+            </div>
+          </div>
+        </div>
+
+        {filterByDepartment ? (
+          Object.keys(departmentMapMemo).map((departmentKey) => (
+            <div className={style.sectionContainer}>
+              <div className={style.sectionHeading}>
+                {departmentKey === 'undefined' ? 'None' : departmentKey}
+              </div>
+              <List>
+                {departmentMapMemo[departmentKey].map(({ calendar, event }) => (
+                  <EventCell key={event.id} calendar={calendar} event={event} />
+                ))}
+              </List>
+            </div>
+          ))
+        ) : (
+          <List>
+            {filteredEvents.map(({ calendar, event }) => (
+              <EventCell key={event.id} calendar={calendar} event={event} />
+            ))}
+          </List>
+        )}
       </div>
     </div>
   )

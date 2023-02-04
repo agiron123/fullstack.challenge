@@ -32,3 +32,52 @@
   @include title-text;
   color: $blackColor;
 }
+
+.errorContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 95%;
+  background-color: $errorColor;
+  border-radius: 8px;
+  margin: 0 auto;
+}
+
+.errorTextWrapper {
+  padding: 8px 0px 8px 0px
+}
+
+.errorText {
+  @include body-medium-text;
+  padding-bottom: 12px;
+  color: $lightGrayColor
+}
+
+.dismissText {
+  @include body-medium-text;
+  color: $lightGrayColor;
+  display: block;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.sectionHeading {
+  @include title-text;
+  color: $blackColor;
+  padding-bottom: 12px;
+}
+
+.inputLabel {
+  @include body-medium-text;
+  color: $blackColor;
+  padding-left: 12px;
+}
+
+.sectionContainer {
+  padding-top: 12px;
+  padding-left: 15px;
+}
+
+.filtersWrapper {
+  display: flex;
+}
